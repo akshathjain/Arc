@@ -56,15 +56,14 @@ public class MainActivity extends AppCompatActivity {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                final double x = service.getCurrentNow();
-                final boolean ischarge = service.isCharging();
-                System.out.println(x + " " + ischarge);
+                final String s = service.toString();
+                System.out.println(s);
 
                 //now run on ui thread to update
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        tv.setText(x + "\n" + ischarge);
+                        tv.setText(s);
                     }
                 });
             }

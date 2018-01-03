@@ -1,8 +1,10 @@
 package com.akshathjain.arc.services;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.IBinder;
@@ -15,6 +17,7 @@ import android.support.annotation.Nullable;
 public class BatteryService extends Service {
     private final IBinder reference = new BatteryServiceBinder();
     private BatteryManager bm;
+    private boolean isCharging;
 
     @Nullable
     @Override
@@ -25,8 +28,12 @@ public class BatteryService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         bm = (BatteryManager) getApplicationContext().getSystemService(Context.BATTERY_SERVICE);
-
         return Service.START_STICKY;
+    }
+
+    private Intent getBatteryStatus(){
+        IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        return getApplicationContext().registerReceiver(null, iFilter);
     }
 
     public double getCurrentNow(){
@@ -38,35 +45,48 @@ public class BatteryService extends Service {
     }
 
     public boolean getBatteryCold(){
-        return bm.getIntProperty(BatteryManager.BATTERY_HEALTH_COLD) == 1;
+        return getBatteryStatus().getIntExtra(BatteryManager.EXTRA_HEALTH, -1) == BatteryManager.BATTERY_HEALTH_COLD;
     }
 
     public boolean getBatteryDead(){
-        return bm.getIntProperty(BatteryManager.BATTERY_HEALTH_DEAD) == 1;
+        return getBatteryStatus().getIntExtra(BatteryManager.EXTRA_HEALTH, -1) == BatteryManager.BATTERY_HEALTH_DEAD;
     }
 
     public boolean getBatteryGood(){
-        return bm.getIntProperty(BatteryManager.BATTERY_HEALTH_GOOD) == 1;
+        return getBatteryStatus().getIntExtra(BatteryManager.EXTRA_HEALTH, -1) == BatteryManager.BATTERY_HEALTH_GOOD;
     }
 
-    public boolean getBatteryOverheath(){
-        return bm.getIntProperty(BatteryManager.BATTERY_HEALTH_OVERHEAT) == 1;
+    public boolean getBatteryOverheat(){
+        return getBatteryStatus().getIntExtra(BatteryManager.EXTRA_HEALTH, -1) == BatteryManager.BATTERY_HEALTH_OVERHEAT;
     }
 
     public boolean getBatteryOvervolt(){
-        return bm.getIntProperty(BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE) == 1;
+        return getBatteryStatus().getIntExtra(BatteryManager.EXTRA_HEALTH, -1) == BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE;
     }
 
     public int getPercentage(){
-        return bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        return (int) (100 * (double) getBatteryStatus().getIntExtra(BatteryManager.EXTRA_LEVEL, 0) / getBatteryStatus().getIntExtra(BatteryManager.EXTRA_SCALE, -1));
+    }
+
+    public double getTemperature(){
+        return 9.0 / 5 * ((double) getBatteryStatus().getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) / 10) + 32;
+    }
+
+    public String getTechnology(){
+        return getBatteryStatus().getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
+    }
+
+    public double getVoltage(){
+        return getBatteryStatus().getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1) / 1000.0;
     }
 
     public boolean isCharging(){
-        return isPluggedAC() || isPluggedUSB() || isPluggedWireless();
+        int status = getBatteryStatus().getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        return status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
     }
 
-    public boolean isPluggedAC(){
-        return bm.getIntProperty(BatteryManager.BATTERY_PLUGGED_AC) == 1;
+    public String isPluggedAC(){
+        return bm.getIntProperty(BatteryManager.BATTERY_PLUGGED_AC) + "";
     }
 
     public boolean isPluggedUSB(){
@@ -81,5 +101,24 @@ public class BatteryService extends Service {
         public BatteryService getService() {
             return BatteryService.this;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Current Now: " + getCurrentNow() + "\n" +
+                "Remaining Energy: " + getRemainingEnergy() + "\n" +
+                "BatteryCold: " + getBatteryCold() + "\n" +
+                "BatteryDead: " + getBatteryDead() + "\n" +
+                "BatteryGood: " + getBatteryGood() + "\n" +
+                "BatteryOverheat: " + getBatteryOverheat() + "\n" +
+                "BatteryOverVolt: " + getBatteryOvervolt() + "\n" +
+                "Percentage: " + getPercentage() + "\n" +
+                "IsCharging: " + isCharging() + "\n" +
+                "PluggedAC: " + isPluggedAC() + "\n" +
+                "PluggedUSB: " + isPluggedUSB() + "\n" +
+                "PluggedWireless: " + isPluggedWireless() + "\n" +
+                "Temperature: " + getTemperature() + "F\n" +
+                "Technology: " + getTechnology() + "\n" +
+                "Voltage: " + getVoltage();
     }
 }
