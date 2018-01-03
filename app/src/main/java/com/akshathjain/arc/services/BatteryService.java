@@ -30,12 +30,51 @@ public class BatteryService extends Service {
     }
 
     public double getCurrentNow(){
-        return (double) bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
+        return -1 * (double) bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
+    }
+
+    public double getRemainingEnergy(){
+        return (double) bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER) / Math.pow(10, 9);
+    }
+
+    public boolean getBatteryCold(){
+        return bm.getIntProperty(BatteryManager.BATTERY_HEALTH_COLD) == 1;
+    }
+
+    public boolean getBatteryDead(){
+        return bm.getIntProperty(BatteryManager.BATTERY_HEALTH_DEAD) == 1;
+    }
+
+    public boolean getBatteryGood(){
+        return bm.getIntProperty(BatteryManager.BATTERY_HEALTH_GOOD) == 1;
+    }
+
+    public boolean getBatteryOverheath(){
+        return bm.getIntProperty(BatteryManager.BATTERY_HEALTH_OVERHEAT) == 1;
+    }
+
+    public boolean getBatteryOvervolt(){
+        return bm.getIntProperty(BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE) == 1;
+    }
+
+    public int getPercentage(){
+        return bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
     }
 
     public boolean isCharging(){
-        System.out.println(bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS));
-        return true;
+        return isPluggedAC() || isPluggedUSB() || isPluggedWireless();
+    }
+
+    public boolean isPluggedAC(){
+        return bm.getIntProperty(BatteryManager.BATTERY_PLUGGED_AC) == 1;
+    }
+
+    public boolean isPluggedUSB(){
+        return bm.getIntProperty(BatteryManager.BATTERY_PLUGGED_USB) == 1;
+    }
+
+    public boolean isPluggedWireless(){
+        return bm.getIntProperty(BatteryManager.BATTERY_PLUGGED_WIRELESS) == 1;
     }
 
     public class BatteryServiceBinder extends Binder {
